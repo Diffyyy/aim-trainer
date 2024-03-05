@@ -1,0 +1,114 @@
+html, body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    background-color: #ffffff;
+    margin: 0;
+    overflow: hidden;
+    font-family: arial;
+}
+
+#blocker {
+
+    position: absolute;
+
+    width: 100%;
+    height: 100%;
+
+    background-color: rgba(0,0,0,0.5);
+
+}
+
+/* #rectangle1{
+    width:20%; 
+    height:33.3%; 
+    top: -66.6%; 
+    left:-10%;
+}
+
+#rectangle2{
+    width:20%; 
+    height:33.3%; 
+    top: 0; 
+    left:-10%
+}
+
+#rectangle3{
+    width:33.3%; 
+    height:20%; 
+    float: left; 
+    top: -10%; 
+    left: -66.6%;
+}
+
+#rectangle4{
+    width:33.3%; 
+    height:20%; 
+    float: right;
+    top: -10%; 
+    right: 33.3%
+} */
+
+#instructions {
+    width: 100%;
+    height: 100%;
+    top: 50%;
+    left: 50%;
+    position: absolute;
+    margin-left: -50%;
+
+    color: #ffffff;
+    text-align: center;
+
+    cursor: pointer;
+
+}
+
+.centered {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 100vh;
+}
+
+.helper {
+    display: inline-block;
+    height: 50%;
+    vertical-align: middle;
+}
+
+div img {
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    margin:auto;
+    vertical-align: middle;
+    margin-top:40vh;
+}
+
+#container {
+    position: absolute;
+    top: 50%;
+    left: 48.35%;
+    transform: translate(-50%, -50%);
+}
+
+#container img {
+    display: block;
+    width: 50px; /* Adjust width as needed */
+    height: 50px; /* Adjust height as needed */
+    margin: auto;
+}
+
+#hud {
+    bottom: 10px;
+    position: absolute;
+    right: 10px;
+    z-index: 100;
+}
