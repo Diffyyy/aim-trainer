@@ -204,7 +204,7 @@ document.body.onmousedown = function () {
     // Calculate the direction vector based on camera rotation
     const direction = new THREE.Vector3();
     controls.getDirection(direction);
-    bullet.velocity = direction.clone();
+    bullet.velocity = direction.clone().multiplyScalar(10);
 
     //bullet.velocity = new THREE.Vector3(-Math.sin(camera.rotation.y), 0, Math.cos(camera.rotation.y));
     bullet.alive = true;
