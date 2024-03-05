@@ -25,6 +25,9 @@ let renderer;
 let clock;
 let score = 0;
 
+var start_time = performance.now();
+var end_time;
+
 function lockCursor() {
     if (havePointerLock) {
       const element = document.body;
@@ -229,6 +232,10 @@ document.body.onmousedown = function () {
         // Check if the intersected object is a target
         if (intersection.object === target) {
           // Increment the score
+          end_time = performance.now();
+          var diff = end_time - start_time;
+          console.log(diff + "  milliseconds")
+          start_time = performance.now();
           score += 1;
           updateScore();
           // Remove target when hit
