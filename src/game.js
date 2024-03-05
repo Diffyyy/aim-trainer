@@ -23,6 +23,7 @@ let camera;
 let target;
 let renderer;
 let clock;
+let score = 0;
 
 function lockCursor() {
     if (havePointerLock) {
@@ -62,7 +63,7 @@ function lockCursor() {
         // Ask the browser to lock the pointer
         element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
   
-        if (/Chrome/i.test(navigator.userAgent)) {
+        if (/Firefox/i.test(navigator.userAgent)) {
           var fullscreenchange = function (event) {
             if (document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element) {
               document.removeEventListener('fullscreenchange', fullscreenchange);
@@ -195,29 +196,57 @@ function keyDown(event) {
     keyboard[event.keyCode] = true;
 }
 document.body.onmousedown = function () {
-    const bullet = new THREE.Mesh(
-        new THREE.SphereGeometry(0.05, 8, 8),
-        new THREE.MeshBasicMaterial({ color: 0xffffff }),
-    );
-    bullet.position.set(0, PLAYER.height, -5);
+    // const bullet = new THREE.Mesh(
+    //     new THREE.SphereGeometry(0.05, 8, 8),
+    //     new THREE.MeshBasicMaterial({ color: 0xffffff }),
+    // );
+    // bullet.position.set(0, PLAYER.height, -5);
 
-    // Calculate the direction vector based on camera rotation
-    const direction = new THREE.Vector3();
-    controls.getDirection(direction);
-    bullet.velocity = direction.clone().multiplyScalar(10);
+    // // Calculate the direction vector based on camera rotation
+    // const direction = new THREE.Vector3();
+    // controls.getDirection(direction);
+    // bullet.velocity = direction.clone().multiplyScalar(10);
 
-    //bullet.velocity = new THREE.Vector3(-Math.sin(camera.rotation.y), 0, Math.cos(camera.rotation.y));
-    bullet.alive = true;
+    // //bullet.velocity = new THREE.Vector3(-Math.sin(camera.rotation.y), 0, Math.cos(camera.rotation.y));
+    // bullet.alive = true;
 
-    setTimeout(() => {
-        bullet.alive = false;
-        scene.remove(bullet);
-    }, 1000);
+    // setTimeout(() => {
+    //     bullet.alive = false;
+    //     scene.remove(bullet);
+    // }, 1000);
 
-    bullets.push(bullet);
-    scene.add(bullet);
-    PLAYER.canShoot = 10;
+    // bullets.push(bullet);
+    // scene.add(bullet);
+    // PLAYER.canShoot = 10;
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera({ x: 0, y: 0 }, camera);
+
+    const intersects = raycaster.intersectObjects(scene.children);
+
+    if (intersects.length > 0) {
+        const intersection = intersects[0];
+        // Check if the intersected object is a target
+        if (intersection.object === target) {
+          // Increment the score
+          score += 1;
+          updateScore();
+          // Remove target when hit
+          scene.remove(target);
+          // Respawn the target at a new location
+          spawnTarget(scene);
+            
+        }
+    }
 };
+
+function updateScore() {
+  // Update the score display
+  const scoreElement = document.getElementById('score');
+  if (scoreElement) {
+      scoreElement.textContent = score.toString();
+  }
+}
 
 function trackBullets() {
     for (let index = 0; index < bullets.length; index += 1) {
@@ -255,6 +284,8 @@ function animate() {
     target.rotation.y += 0.02;
   
     trackBullets();
+
+    
   
     renderer.render(scene, camera);
 }
