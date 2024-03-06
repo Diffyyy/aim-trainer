@@ -11,15 +11,47 @@ const ROOM_SIZE = 1000;
 const PLAYER = {height: 1.5, turnSpeed: SENSITIVITY, canShoot: false}
 const PLAYER_POV = 80
 //how many times game 'repeats'- game is repeated when all targets in targetPositions are destroyed
-const NUM_GAMELOOP = 1
+const NUM_GAMELOOP = 5
 
+
+//CONFIG: Horizontal
 const targetPositions = [
-  { x: 0, y: 3, z: 3 },    // Center
-  { x: -10, y: 3, z: 3 },    // Far Left
-  { x: 10, y: 3, z: 3 },     // Far Right
-  { x: -5, y: 3, z: 3 },      // Close Left
-  { x: 5, y: 3, z: 3 },       // Close Right
+  { x: -5, y: 3, z: 3 },
+  { x: 0, y: 3, z: 3 },
+  { x: 5, y: 3, z: 3 },
 ];
+
+
+// //CONFIG: Vertical
+// const targetPositions =[
+//   { x: 0, y: 7, z: 3},
+//   { x: 0, y: 3, z: 3},
+// ];
+
+
+// //CONFIG: Z-shaped
+// const targetPositions =[
+//   { x: -3, y: 7, z: 3},
+//   { x: 3, y: 3, z: 3}, 
+//   { x: -3, y: 3, z: 3},
+//   { x: 3, y: 7, z: 3},
+// ];
+
+// //CONFIG: Box
+// const targetPositions =[
+//   { x: -3, y: 7, z: 3},
+//   { x: -3, y: 3, z: 3}, 
+//   { x: 3, y: 3, z: 3},
+//   { x: 3, y: 7, z: 3},
+// ];
+
+// //CONFIG: Differing Sizes Z
+// const targetPositions =[
+//   { x: -3, y: 7, z: 3},
+//   { x: 3, y: 3, z: 10}, 
+//   { x: -3, y: 3, z: 3},
+//   { x: 3, y: 7, z: 10},
+// ];
 
 const blocker = document.getElementById('blocker');
 const instructions = document.getElementById('instructions');
@@ -42,6 +74,8 @@ let totalShotsTaken = 0;
 
 var start_time = performance.now();
 var end_time;
+var move_counter = 0;
+var move_dir = 1;
 
 function lockCursor() {
   if (havePointerLock) {
@@ -357,6 +391,43 @@ function animate() {
   
   target.rotation.x += 0.01;
   target.rotation.y += 0.02;
+
+
+  // //CONFIG: Moving Target Horizontal
+  // if(move_counter <= 2 && move_dir){
+  //   move_dir = 1;
+  //   target.position.x += 0.05;
+  //   move_counter += 0.05;
+  // }
+  // else 
+  //   move_dir = 0;
+  
+  // if(move_counter >= -2 && !move_dir)
+  // {
+  //   move_dir = 0;
+  //   target.position.x -= 0.05;
+  //   move_counter -= 0.05;
+  // }
+  // else
+  //   move_dir = 1;
+
+  //CONFIG: Moving Target Vertical
+  if(move_counter <= 1 && move_dir){
+    move_dir = 1;
+    target.position.y += 0.05;
+    move_counter += 0.05;
+  }
+  else 
+    move_dir = 0;
+  
+  if(move_counter >= -1 && !move_dir)
+  {
+    move_dir = 0;
+    target.position.y -= 0.05;
+    move_counter -= 0.05;
+  }
+  else
+    move_dir = 1;
 
   renderer.render(scene, camera);
 }
