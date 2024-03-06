@@ -289,6 +289,18 @@ function endGame(){
   let accuracy = (numTargets / totalShotsTaken) * 100;
   let averageReactionTime = getAverageReactionTime(reactionTime);
   let totalReactionTime = getTotalReactionTime(reactionTime);
+
+  // Prepare files
+  let reactionTimeCSV = reactionTime.join('\n');
+  let statisticsCSV = 'Accuracy,Total Reaction Time,Average Reaction Time\n' +
+                      accuracy + ',' +
+                      totalReactionTime + ',' +
+                      averageReactionTime;
+
+  // Export CSV files
+  exportToCSV(reactionTimeCSV, 'reaction_times.csv');
+  exportToCSV(statisticsCSV, 'game_statistics.csv');
+
   // Display alert to inform the player that the game has ended
   alert('Game Over! Your statistics are: \nAccuracy: ' + accuracy.toFixed(2) + ' %' + '\nAverage Reaction Time: ' + averageReactionTime.toFixed(2) + ' seconds' + '\nTotal Time: ' + totalReactionTime.toFixed(2) + ' seconds');
   
@@ -313,6 +325,16 @@ function getTotalReactionTime(arr){
   let sum = arr.reduce((total, currentValue) => total + currentValue, 0);
     
   return sum/1000;
+}
+
+function exportToCSV(data, filename) {
+  let csvContent = 'data:text/csv;charset=utf-8,' + data;
+  let encodedUri = encodeURI(csvContent);
+  let link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click(); 
 }
 
 
