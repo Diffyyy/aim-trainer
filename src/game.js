@@ -10,8 +10,16 @@ const SENSITIVITY = Math.PI * 0.1
 const ROOM_SIZE = 1000;
 const PLAYER = {height: 1.5, turnSpeed: SENSITIVITY, canShoot: false}
 const PLAYER_POV = 80
+//how many times game 'repeats'- game is repeated when all targets in targetPositions are destroyed
+const NUM_GAMELOOP = 1
 
-
+const targetPositions = [
+  { x: 0, y: 3, z: 3 },    // Center
+  { x: -10, y: 3, z: 3 },    // Far Left
+  { x: 10, y: 3, z: 3 },     // Far Right
+  { x: -5, y: 3, z: 3 },      // Close Left
+  { x: 5, y: 3, z: 3 },       // Close Right
+];
 
 const blocker = document.getElementById('blocker');
 const instructions = document.getElementById('instructions');
@@ -27,6 +35,10 @@ let target;
 let renderer;
 let clock;
 let score = 0;
+let numTargets = 1;
+let reactionTime = [];
+
+let totalShotsTaken = 0;
 
 var start_time = performance.now();
 var end_time;
@@ -39,6 +51,7 @@ function lockCursor() {
             || document.webkitPointerLockElement === element) {
         controls.enabled = true;
         blocker.style.display = 'none';
+        document.addEventListener('mousedown', onMouseDown);
       } else {
         controls.enabled = false;
 
@@ -47,6 +60,7 @@ function lockCursor() {
         blocker.style.display = 'box';
 
         instructions.style.display = '';
+        
       }
     };
 
@@ -103,13 +117,6 @@ function getRandomLoc(min, max) {
   return Math.floor(Math.random() * (max - min) + min); // The maximum is exclusive and the minimum is inclusive
 }
 
-const targetPositions = [
-  { x: 0, y: 3, z: 8 },    // Center
-  { x: -10, y: 3, z: 8 },    // Far Left
-  { x: 15, y: 3, z: 8 },     // Far Right
-  { x: -5, y: 3, z: 8 },      // Close Left
-  { x: 5, y: 3, z: 8 },       // Close Right
-];
 
 //declare an index for target positions: start at 0
 //whenever spawn target is called add 1 to index
@@ -119,22 +126,19 @@ let index = 0;
 
 function spawnTarget(scene) {
   const geometry = new THREE.SphereGeometry(0.5, 32, 32);
-  const material = new THREE.MeshBasicMaterial({ color: 0xffbf00 });
+  const material = new THREE.MeshBasicMaterial({ color: 0xAA4A44});
   target = new THREE.Mesh(geometry, material);
-  // scene.add(target);
 
-
-  // //TODO: NEED TO CHANGE THIS
-  // target.position.x += getRandomLoc(-10, 10);
-  // target.position.y += getRandomLoc(1, 5);
-  // target.position.z += getRandomLoc(0, 10);
-
-  target.position.set(targetPositions[index].x, targetPositions[index].y, targetPositions[index].z)
-  scene.add(target);
-  console.log('Spawned at: ', targetPositions[index].x, ' ', targetPositions[index].y, ' ', targetPositions[index].z)
-
-  //set new index correspondingly
-  index = (index + 1) % targetPositions.length
+  if(numTargets <= targetPositions.length * NUM_GAMELOOP){
+    target.position.set(targetPositions[index].x, targetPositions[index].y, targetPositions[index].z)
+    scene.add(target);
+    if (numTargets < targetPositions.length * NUM_GAMELOOP) {
+      numTargets++;
+    }
+    //set new index correspondingly
+    index = (index + 1) % targetPositions.length
+  }
+  
 }
 
 
@@ -216,20 +220,20 @@ function init() {
   addScore();
   createPlayer(scene);
   lockCursor(havePointerLock);
-
   render(scene);
   animate();
+  
 }
 
 function keyDown(event) {
   keyboard[event.keyCode] = true;
 }
 
-document.addEventListener('mousedown', onMouseDown);
 
 function onMouseDown(event) {
   if (event.button === 0) { // Left mouse button clicked
     shoot(event);
+    console.log('pew')
   }
 }
 
@@ -240,7 +244,8 @@ function shoot(event) {
 
   // Check for intersections with objects in the scene
   const intersects = raycaster.intersectObjects(scene.children);
-
+  // Add 1 to total shots taken
+  totalShotsTaken++;
   if (intersects.length > 0) {
     const intersection = intersects[0];
     
@@ -251,6 +256,7 @@ function shoot(event) {
       end_time = performance.now();
       var diff = end_time - start_time;
       console.log(diff + "  milliseconds")
+      reactionTime.push(diff)
       start_time = performance.now();
       
       // Increment the score
@@ -261,6 +267,7 @@ function shoot(event) {
 
       // Respawn the target at a new location
       spawnTarget(scene);
+
     }
   }
 }
@@ -270,50 +277,44 @@ function updateScore() {
   const scoreElement = document.getElementById('score');
   if (scoreElement) {
     scoreElement.textContent = score.toString();
+    if (score >= targetPositions.length * NUM_GAMELOOP) {
+      endGame();
+    }
   }
 }
 
-// document.body.onmousedown = function () {
-//   const raycaster = new THREE.Raycaster();
-//   raycaster.setFromCamera({ x: 0, y: 0 }, camera);
+function endGame(){ 
+  console.log('Number of targets: ' + numTargets)
+  console.log('Total shots taken: ' + totalShotsTaken)
+  let accuracy = (numTargets / totalShotsTaken) * 100;
+  let averageReactionTime = getAverageReactionTime(reactionTime);
+  let totalReactionTime = getTotalReactionTime(reactionTime);
+  // Display alert to inform the player that the game has ended
+  alert('Game Over! Your statistics are: \nAccuracy: ' + accuracy.toFixed(2) + ' %' + '\nAverage Reaction Time: ' + averageReactionTime.toFixed(2) + ' seconds' + '\nTotal Time: ' + totalReactionTime.toFixed(2) + ' seconds');
+  
+  //refresh page
+  window.location.reload();
 
-//   const intersects = raycaster.intersectObjects(scene.children);
-
-//   if (intersects.length > 0) {
-//       const intersection = intersects[0];
-//       // Check if the intersected object is a target
-//       if (intersection.object === target) {
-//         // Increment the score
-//         end_time = performance.now();
-//         var diff = end_time - start_time;
-//         console.log(diff + "  milliseconds")
-//         start_time = performance.now();
-//         score += 1;
-//         updateScore();
-//         // Remove target when hit
-//         scene.remove(target);
-//         // Respawn the target at a new location
-//         spawnTarget(scene);
-          
-//       }
-//   }
-// };
-
-
-function trackBullets() {
-  for (let index = 0; index < bullets.length; index += 1) {
-      if (bullets[index] === undefined) {
-      continue;
-  }
-
-  if (bullets[index].alive == false) {
-      bullets.splice(index, 1);
-      continue;
-  }
-
-      bullets[index].position.add(bullets[index].velocity);
-  }
 }
+
+function getAverageReactionTime(arr) {
+  if (arr.length === 0) {
+    return 0;
+  }
+
+  let sum = arr.reduce((total, currentValue) => total + currentValue, 0);
+
+  let average = sum / arr.length;
+
+  return average/1000;
+}
+
+function getTotalReactionTime(arr){
+  let sum = arr.reduce((total, currentValue) => total + currentValue, 0);
+    
+  return sum/1000;
+}
+
 
 function keyUp(event) {
     keyboard[event.keyCode] = false;
@@ -334,10 +335,6 @@ function animate() {
   
   target.rotation.x += 0.01;
   target.rotation.y += 0.02;
-
-  
-
-  
 
   renderer.render(scene, camera);
 }
