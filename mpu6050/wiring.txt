@@ -1,6 +1,6 @@
 Wiring
 
-5V - VCC
+3.3V - VCC
 GND - GND
 A4 - SDA
 A5 - SCL
