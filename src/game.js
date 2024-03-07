@@ -6,13 +6,20 @@ import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 //define constants
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
-const SENSITIVITY = Math.PI * 0.1
+const MOUSE_SENSITIVITY = Math.PI * 0.1
+const JOYSTICK_SENSITIVITY = Math.PI * 0.002;
 const ROOM_SIZE = 1000;
-const PLAYER = {height: 1.5, turnSpeed: SENSITIVITY, canShoot: false}
+const PLAYER = {height: 1.5, turnSpeed: MOUSE_SENSITIVITY, canShoot: false}
 const PLAYER_POV = 80
 //how many times game 'repeats'- game is repeated when all targets in targetPositions are destroyed
 const NUM_GAMELOOP = 5
 
+//1 for now because I have a keyboard connected else 0
+const GAMEPAD_INDEX = 1;
+// shoot button =  RT
+const SHOOT_BUTTON = 0;
+const X_AXIS = 0;
+const Y_AXIS = 1
 
 //CONFIG: Horizontal
 const targetPositions = [
@@ -58,7 +65,6 @@ const instructions = document.getElementById('instructions');
 
 const havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
 
-const bullets = [];
 const keyboard = {};
 let controls;
 let scene;
@@ -86,6 +92,7 @@ function lockCursor() {
         controls.enabled = true;
         blocker.style.display = 'none';
         document.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('gamepadconnected', onGamepadConnected);
       } else {
         controls.enabled = false;
 
@@ -111,6 +118,7 @@ function lockCursor() {
     document.addEventListener('mozpointerlockerror', pointerlockerror, false);
     document.addEventListener('webkitpointerlockerror', pointerlockerror, false);
 
+    //TODO: add condition here when any button in gamepad is clicked
     instructions.addEventListener('click', (event) => {
       instructions.style.display = 'none';
 
@@ -186,7 +194,7 @@ function createSpace(scene) {
 
   let wall1 = new THREE.Mesh(
     new THREE.BoxGeometry(ROOM_SIZE, 40, 20),
-    new THREE.MeshBasicMaterial({ color: 0x282828 }),
+    new THREE.MeshBasicMaterial({ color: 0xAFEEEE }),
   );
   wall1.position.y -= 1;
   wall1.position.z += 20;
@@ -194,7 +202,7 @@ function createSpace(scene) {
 
   let wall2 = new THREE.Mesh(
     new THREE.BoxGeometry(20, 40, ROOM_SIZE),
-    new THREE.MeshBasicMaterial({ color: 0x282828 }),
+    new THREE.MeshBasicMaterial({ color: 0xAFEEEE }),
   );
   wall2.position.y -= 1;
   wall2.position.x += 30;
@@ -202,7 +210,7 @@ function createSpace(scene) {
 
   let wall3 = new THREE.Mesh(
     new THREE.BoxGeometry(20, 40, ROOM_SIZE),
-    new THREE.MeshBasicMaterial({ color: 0x282828 }),
+    new THREE.MeshBasicMaterial({ color: 0xAFEEEE }),
   );
   wall3.position.y -= 1;
   wall3.position.x -= 30;
@@ -210,7 +218,7 @@ function createSpace(scene) {
 
   let wall4 = new THREE.Mesh(
     new THREE.BoxGeometry(ROOM_SIZE, 40, 20),
-    new THREE.MeshBasicMaterial({ color: 0x606060 }),
+    new THREE.MeshBasicMaterial({ color: 0xAFEEEE }),
   );
   wall4.position.y -= 1;
   wall4.position.z -= 40;
@@ -218,7 +226,7 @@ function createSpace(scene) {
 
   let ceiling = new THREE.Mesh(
     new THREE.BoxGeometry(ROOM_SIZE, 1, ROOM_SIZE),
-    new THREE.MeshBasicMaterial({ color: 0x484848 }),
+    new THREE.MeshBasicMaterial({ color: 0x00FFFF }),
   );
   ceiling.position.y += 40;
   scene.add(ceiling);
@@ -265,17 +273,87 @@ function keyDown(event) {
 
 
 function onMouseDown(event) {
-  if (event.button === 0) { // Left mouse button clicked
+  if (event.type === 'mousedown' && event.button === 0) { // Left mouse button clicked
     shoot(event);
-    console.log('pew')
   }
 }
+
+function onGamepadConnected(event){
+  gamepadLoop();
+}
+
+
+let isShootButtonPressed = false;
+const deadZone = 0.2; // Adjust this value as needed
+
+function gamepadLoop(){
+  const gamepad = navigator.getGamepads()[GAMEPAD_INDEX];
+  const upDown = gamepad.axes[1]
+  const leftRight = gamepad.axes[0]
+
+  // Need to do this to avoid multiple registers of one button press/hold
+  if (gamepad.buttons[SHOOT_BUTTON].value === 1 && !isShootButtonPressed) {
+    shoot();
+    isShootButtonPressed = true;
+  } else if (gamepad.buttons[SHOOT_BUTTON].value === 0) {
+    isShootButtonPressed = false;
+  }
+
+  //  if(upDown >= deadZone){
+  //   console.log('Down pressed!')
+  //   controls.getObject().rotation.x += JOYSTICK_SENSITIVITY 
+  // }
+  // else if(upDown <= -deadZone){
+  //   console.log('Up pressed!')
+  //   controls.getObject().rotation.x -= JOYSTICK_SENSITIVITY 
+  // }
+
+  // if(leftRight >= deadZone) {
+  //   console.log('Right pressed!')
+  //   controls.getObject().rotation.y += JOYSTICK_SENSITIVITY 
+  // }
+  // else if (leftRight <= -deadZone) {
+  //   console.log('Left pressed!')
+  //   controls.getObject().rotation.y -= JOYSTICK_SENSITIVITY 
+  // }
+
+  // Create quaternions for rotation
+  const quaternionUpDown = new THREE.Quaternion();
+  const quaternionLeftRight = new THREE.Quaternion();
+
+  if (upDown >= deadZone || upDown <= -deadZone) {
+    // Adjust rotation around the x-axis (up and down movement)
+    quaternionUpDown.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -upDown * JOYSTICK_SENSITIVITY);
+  } else {
+    quaternionUpDown.set(0, 0, 0, 1); // Identity quaternion if no input
+  }
+
+  if (leftRight >= deadZone || leftRight <= -deadZone) {
+    // Adjust rotation around the y-axis (left and right movement)
+    quaternionLeftRight.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -leftRight * JOYSTICK_SENSITIVITY);
+  } else {
+    quaternionLeftRight.set(0, 0, 0, 1); // Identity quaternion if no input
+  }
+
+  // Combine rotations
+  const combinedQuaternion = quaternionUpDown.multiply(quaternionLeftRight);
+
+  // Apply rotation to the camera
+  controls.getObject().quaternion.multiply(combinedQuaternion).normalize();
+
+ 
+
+
+
+  requestAnimationFrame(gamepadLoop);
+}
+
 
 function shoot(event) {
   // Create a raycaster
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera({ x: 0, y: 0 }, camera);
-
+  console.log('pew')
   // Check for intersections with objects in the scene
   const intersects = raycaster.intersectObjects(scene.children);
   // Add 1 to total shots taken
@@ -305,6 +383,7 @@ function shoot(event) {
     }
   }
 }
+ 
 
 function updateScore() {
   score += 1;
