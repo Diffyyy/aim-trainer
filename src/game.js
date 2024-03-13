@@ -93,6 +93,7 @@ function lockCursor() {
         blocker.style.display = 'none';
         document.addEventListener('mousedown', onMouseDown);
         window.addEventListener('gamepadconnected', onGamepadConnected);
+        window.addEventListener('gyroconnected', onGyroConnected);
       } else {
         controls.enabled = false;
 
@@ -282,9 +283,55 @@ function onGamepadConnected(event){
   gamepadLoop();
 }
 
+function onGyroConnected(event){
+  gyroLoop();
+}
+
 
 let isShootButtonPressed = false;
 const deadZone = 0.2; // Adjust this value as needed
+
+function gyroLoop(){
+  const xCur = 0
+  const yCur = 0
+
+  //TODO: Input the values in xNew yNew for every change
+  const xNew = 0
+  const yNew = 0
+
+  const xDelta = xNew - xCur
+  const yDelta = yNew - yCur
+
+  xCur = xNew
+  yCur = yNew
+
+  // Create quaternions for rotation
+  const quaternionUpDown = new THREE.Quaternion();
+  const quaternionLeftRight = new THREE.Quaternion();
+
+  if (yDelta >= deadZone || yDelta <= -deadZone) {
+    // Adjust rotation around the x-axis (up and down movement)
+    quaternionUpDown.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -yDelta * JOYSTICK_SENSITIVITY);
+  } else {
+    quaternionUpDown.set(0, 0, 0, 1); // Identity quaternion if no input
+  }
+
+  if (xDelta >= deadZone || xDelta <= -deadZone) {
+    // Adjust rotation around the y-axis (left and right movement)
+    quaternionLeftRight.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -xDelta * JOYSTICK_SENSITIVITY);
+  } else {
+    quaternionLeftRight.set(0, 0, 0, 1); // Identity quaternion if no input
+  }
+
+  // Combine rotations
+  const combinedQuaternion = quaternionUpDown.multiply(quaternionLeftRight);
+
+  // Apply rotation to the camera
+  controls.getObject().quaternion.multiply(combinedQuaternion).normalize();
+
+  requestAnimationFrame(gyroLoop);
+}
+
 
 function gamepadLoop(){
   const gamepad = navigator.getGamepads()[GAMEPAD_INDEX];
