@@ -292,33 +292,53 @@ let isShootButtonPressed = false;
 const deadZone = 0.2; // Adjust this value as needed
 
 function gyroLoop(){
-  const xCur = 0
-  const yCur = 0
 
-  //TODO: Input the values in xNew yNew for every change
-  const xNew = 0
-  const yNew = 0
+  const SerialPort = require('serialport');
+  const Readline = require('@serialport/parser-readline');
 
-  const xDelta = xNew - xCur
-  const yDelta = yNew - yCur
+  let prevX = null; // Initialize prevX and prevY as null initially
+  let prevY = null;
 
-  xCur = xNew
-  yCur = yNew
+  const port = new SerialPort('COM3', { baudRate: 9600 });
+  const parser = port.pipe(new Readline({ delimiter: '\n' }));
+
+  parser.on('data', (data) => {
+    // Parse the received data as X and Y values (assuming they are separated by a space)
+    const [x, y] = data.split(' ').map(Number);
+  
+    // If prevX and prevY are null, set them to the initial values
+    if (prevX === null || prevY === null) {
+      prevX = x;
+      prevY = y;
+      return; // Skip further processing for the first data point
+    }
+  
+    // Compute the change in X and Y
+    const deltaX = x - prevX;
+    const deltaY = y - prevY;
+  
+    // Update previous X and Y values
+    prevX = x;
+    prevY = y;
+  
+    console.log('Change in X:', deltaX, 'Change in Y:', deltaY);
+    // Now you can use deltaX and deltaY as needed in your application
+  });
 
   // Create quaternions for rotation
   const quaternionUpDown = new THREE.Quaternion();
   const quaternionLeftRight = new THREE.Quaternion();
 
-  if (yDelta >= deadZone || yDelta <= -deadZone) {
+  if (deltaY >= deadZone || deltaY <= -deadZone) {
     // Adjust rotation around the x-axis (up and down movement)
-    quaternionUpDown.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -yDelta * JOYSTICK_SENSITIVITY);
+    quaternionUpDown.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -deltaY * JOYSTICK_SENSITIVITY);
   } else {
     quaternionUpDown.set(0, 0, 0, 1); // Identity quaternion if no input
   }
 
-  if (xDelta >= deadZone || xDelta <= -deadZone) {
+  if (deltaX >= deadZone || deltaX <= -deadZone) {
     // Adjust rotation around the y-axis (left and right movement)
-    quaternionLeftRight.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -xDelta * JOYSTICK_SENSITIVITY);
+    quaternionLeftRight.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * JOYSTICK_SENSITIVITY);
   } else {
     quaternionLeftRight.set(0, 0, 0, 1); // Identity quaternion if no input
   }
