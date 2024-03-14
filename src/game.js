@@ -3,6 +3,10 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
+//NEED TO CHANGE THIS
+const ws = new WebSocket('ws://localhost:8080');
+
+
 //define constants
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
@@ -10,12 +14,12 @@ const MOUSE_SENSITIVITY = Math.PI * 0.1
 const JOYSTICK_SENSITIVITY = Math.PI * 0.002;
 const ROOM_SIZE = 1000;
 const PLAYER = {height: 1.5, turnSpeed: MOUSE_SENSITIVITY, canShoot: false}
-const PLAYER_POV = 80
+const PLAYER_POV = 100
 //how many times game 'repeats'- game is repeated when all targets in targetPositions are destroyed
 const NUM_GAMELOOP = 5
 
 //1 for now because I have a keyboard connected else 0
-const GAMEPAD_INDEX = 1;
+const GAMEPAD_INDEX = 0;
 // shoot button =  RT
 const SHOOT_BUTTON = 0;
 const X_AXIS = 0;
@@ -188,7 +192,7 @@ function spawnTarget(scene) {
 function createSpace(scene) {
   let floor = new THREE.Mesh(
     new THREE.PlaneGeometry(ROOM_SIZE, ROOM_SIZE, ROOM_SIZE, ROOM_SIZE),
-    new THREE.MeshBasicMaterial({ color: 0xa9a9a9 }),
+    new THREE.MeshBasicMaterial({ color: 0xAFEEEE }),
   );
   floor.rotation.x -= Math.PI / 2; // Rotate the floor 90 degrees
   scene.add(floor);
@@ -227,7 +231,7 @@ function createSpace(scene) {
 
   let ceiling = new THREE.Mesh(
     new THREE.BoxGeometry(ROOM_SIZE, 1, ROOM_SIZE),
-    new THREE.MeshBasicMaterial({ color: 0x00FFFF }),
+    new THREE.MeshBasicMaterial({ color: 0xAFEEEE }),
   );
   ceiling.position.y += 40;
   scene.add(ceiling);
@@ -281,80 +285,76 @@ function onMouseDown(event) {
 
 function onGamepadConnected(event){
   gamepadLoop();
+  console.log('Controller Connected')
+  
 }
 
 function onGyroConnected(event){
   gyroLoop();
+  console.log('Gyro Connected')
 }
-
-
 let isShootButtonPressed = false;
 const deadZone = 0.2; // Adjust this value as needed
 
 function gyroLoop(){
+  //TODO: Get the data from gyro.js server
+  ws.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    const { deltaX, deltaY } = data;
 
-  const SerialPort = require('serialport');
-  const Readline = require('@serialport/parser-readline');
-
-  let prevX = null; // Initialize prevX and prevY as null initially
-  let prevY = null;
-
-  const port = new SerialPort('COM3', { baudRate: 9600 });
-  const parser = port.pipe(new Readline({ delimiter: '\n' }));
-
-  parser.on('data', (data) => {
-    // Parse the received data as X and Y values (assuming they are separated by a space)
-    const [x, y, z] = data.split(' ').map(Number);
-  
-    // If prevX and prevY are null, set them to the initial values
-    if (prevX === null || prevY === null) {
-      prevX = x;
-      prevY = y;
-      return; // Skip further processing for the first data point
+    if (deltaY >= deadZone || deltaY <= -deadZone) {
+      // Adjust rotation around the x-axis (up and down movement)
+      quaternionUpDown.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -deltaY * JOYSTICK_SENSITIVITY);
+    } else {
+      quaternionUpDown.set(0, 0, 0, 1); // Identity quaternion if no input
     }
-  
-    // Compute the change in X and Y
-    const deltaX = x - prevX;
-    const deltaY = y - prevY;
-  
-    // Update previous X and Y values
-    prevX = x;
-    prevY = y;
-  
-    console.log('Change in X:', deltaX, 'Change in Y:', deltaY);
-    // Now you can use deltaX and deltaY as needed in your application
-  });
 
-  // Create quaternions for rotation
-  const quaternionUpDown = new THREE.Quaternion();
-  const quaternionLeftRight = new THREE.Quaternion();
+    if (deltaX >= deadZone || deltaX <= -deadZone) {
+      // Adjust rotation around the y-axis (left and right movement)
+      quaternionLeftRight.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * JOYSTICK_SENSITIVITY);
+    } else {
+      quaternionLeftRight.set(0, 0, 0, 1); // Identity quaternion if no input
+    }
 
-  if (deltaY >= deadZone || deltaY <= -deadZone) {
-    // Adjust rotation around the x-axis (up and down movement)
-    quaternionUpDown.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -deltaY * JOYSTICK_SENSITIVITY);
-  } else {
-    quaternionUpDown.set(0, 0, 0, 1); // Identity quaternion if no input
-  }
+    // Combine rotations
+    const combinedQuaternion = quaternionUpDown.multiply(quaternionLeftRight);
 
-  if (deltaX >= deadZone || deltaX <= -deadZone) {
-    // Adjust rotation around the y-axis (left and right movement)
-    quaternionLeftRight.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * JOYSTICK_SENSITIVITY);
-  } else {
-    quaternionLeftRight.set(0, 0, 0, 1); // Identity quaternion if no input
-  }
+    // Apply rotation to the camera
+    controls.getObject().quaternion.multiply(combinedQuaternion).normalize();
+  };
 
-  // Combine rotations
-  const combinedQuaternion = quaternionUpDown.multiply(quaternionLeftRight);
+  // // Create quaternions for rotation
+  // const quaternionUpDown = new THREE.Quaternion();
+  // const quaternionLeftRight = new THREE.Quaternion();
 
-  // Apply rotation to the camera
-  controls.getObject().quaternion.multiply(combinedQuaternion).normalize();
+  // if (deltaY >= deadZone || deltaY <= -deadZone) {
+  //   // Adjust rotation around the x-axis (up and down movement)
+  //   quaternionUpDown.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -deltaY * JOYSTICK_SENSITIVITY);
+  // } else {
+  //   quaternionUpDown.set(0, 0, 0, 1); // Identity quaternion if no input
+  // }
 
+  // if (deltaX >= deadZone || deltaX <= -deadZone) {
+  //   // Adjust rotation around the y-axis (left and right movement)
+  //   quaternionLeftRight.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * JOYSTICK_SENSITIVITY);
+  // } else {
+  //   quaternionLeftRight.set(0, 0, 0, 1); // Identity quaternion if no input
+  // }
+
+  // // Combine rotations
+  // const combinedQuaternion = quaternionUpDown.multiply(quaternionLeftRight);
+
+  // // Apply rotation to the camera
+  // controls.getObject().quaternion.multiply(combinedQuaternion).normalize();
+
+  // port.close()
   requestAnimationFrame(gyroLoop);
 }
 
 
 function gamepadLoop(){
   const gamepad = navigator.getGamepads()[GAMEPAD_INDEX];
+  
   const upDown = gamepad.axes[1]
   const leftRight = gamepad.axes[0]
 
