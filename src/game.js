@@ -304,7 +304,7 @@ function gyroLoop(){
 
   parser.on('data', (data) => {
     // Parse the received data as X and Y values (assuming they are separated by a space)
-    const [x, y] = data.split(' ').map(Number);
+    const [x, y, z] = data.split(' ').map(Number);
   
     // If prevX and prevY are null, set them to the initial values
     if (prevX === null || prevY === null) {
