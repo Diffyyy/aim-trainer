@@ -35,7 +35,6 @@ wss.on('connection', function connection(ws){
                     prevY = y;
                 
                     console.log('Change in X:', deltaX, 'Change in Y:', deltaY);
-                
                     ws.send(JSON.stringify({ deltaX, deltaY }));
                 } else {
                     console.log('Data format not recognized:', line);

@@ -108,7 +108,8 @@ function lockCursor() {
         blocker.style.display = 'none';
         document.addEventListener('mousedown', onMouseDown);
         window.addEventListener('gamepadconnected', onGamepadConnected);
-        window.addEventListener('gyroconnected', onGyroConnected);
+        //window.addEventListener('gyroconnected', onGyroConnected);
+        gyroLoop();
       } else {
         controls.enabled = false;
 
@@ -300,6 +301,10 @@ function onGamepadConnected(event){
   
 }
 
+// Create quaternions for rotation
+const quaternionUpDown = new THREE.Quaternion();
+const quaternionLeftRight = new THREE.Quaternion();
+
 function onGyroConnected(event){
   gyroLoop();
   console.log('Gyro Connected')
@@ -309,9 +314,11 @@ const deadZone = 0.2; // Adjust this value as needed
 
 function gyroLoop(){
   //TODO: Get the data from gyro.js server
+  console.log('gyroLoop');
   ws.onmessage = function(event) {
+    console.log("onmessage triggered");
     const data = JSON.parse(event.data);
-    //console.log(data);
+    //console.log("Received data:", data);
     const { deltaX, deltaY } = data;
 
     if (deltaY >= deadZone || deltaY <= -deadZone) {
@@ -370,10 +377,6 @@ function gamepadLoop(){
   //   console.log('Left pressed!')
   //   controls.getObject().rotation.y -= JOYSTICK_SENSITIVITY 
   // }
-
-  // Create quaternions for rotation
-  const quaternionUpDown = new THREE.Quaternion();
-  const quaternionLeftRight = new THREE.Quaternion();
 
   if (upDown >= deadZone || upDown <= -deadZone) {
     // Adjust rotation around the x-axis (up and down movement)

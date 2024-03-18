@@ -10,12 +10,14 @@ void setup() {
 }
 
 void loop() {
- int16_t ax, ay, az;
- mpu.getRotation(&ax, &ay, &az);
+ int16_t gx, gy, gz;
+ mpu.getRotation(&gx, &gy, &gz);
+ float x = gx / 1000;
+ float y = gy / 1000;
+ float z = gz / 1000;
+ Serial.print("X: "); Serial.print(x);
+ Serial.print(" Y: "); Serial.print(y);
+ Serial.print(" Z: "); Serial.println(z);
 
- Serial.print("X: "); Serial.print(ax);
- Serial.print(" Y: "); Serial.print(ay);
- Serial.print(" Z: "); Serial.println(az);
-
- delay(100);
+ delay(1000);
 }
