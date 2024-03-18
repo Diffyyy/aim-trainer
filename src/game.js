@@ -28,6 +28,8 @@ const PLAYER = {height: 1.5, turnSpeed: MOUSE_SENSITIVITY, canShoot: false}
 const PLAYER_POV = 100
 //how many times game 'repeats'- game is repeated when all targets in targetPositions are destroyed
 const NUM_GAMELOOP = 5
+//either fixed [0] or random points [1]
+const CONFIG = 1
 
 //1 for now because I have a keyboard connected else 0
 const GAMEPAD_INDEX = 0;
@@ -35,6 +37,20 @@ const GAMEPAD_INDEX = 0;
 const SHOOT_BUTTON = 0;
 const X_AXIS = 0;
 const Y_AXIS = 1
+
+const randomPositions = [
+  { x: 0, y: 3, z: 3 },
+  { x: 4, y: 3, z: 3 },
+  { x: -4, y: 3, z: 3 },
+  { x: 0, y: 6, z: 3 },
+  { x: 4, y: 6 , z: 3 },
+  { x: -4, y: 6, z: 3 },
+
+  { x: 7, y: 5, z: 3 },
+  { x: -7, y: 5, z: 3 },
+  { x: 5, y: 8, z: 3 },
+  { x: -5, y: 8, z: 3 },
+]
 
 //CONFIG: Horizontal
 const targetPositions = [
@@ -183,21 +199,59 @@ function getRandomLoc(min, max) {
 
 let index = 0; 
 
+//prev index is the index of the recently destroyed target
+let prevIndex = -1;
 function spawnTarget(scene) {
   const geometry = new THREE.SphereGeometry(0.5, 32, 32);
   const material = new THREE.MeshBasicMaterial({ color: 0xAA4A44});
   target = new THREE.Mesh(geometry, material);
 
   if(numTargets <= targetPositions.length * NUM_GAMELOOP){
-    target.position.set(targetPositions[index].x, targetPositions[index].y, targetPositions[index].z)
-    scene.add(target);
-    if (numTargets < targetPositions.length * NUM_GAMELOOP) {
-      numTargets++;
+    //FIXED POINTS
+    if(CONFIG == 0){
+      target.position.set(targetPositions[index].x, targetPositions[index].y, targetPositions[index].z)
+      scene.add(target);
+      if (numTargets < targetPositions.length * NUM_GAMELOOP) {
+        numTargets++;
+      }
+      //set new index correspondingly
+      index = (index + 1) % targetPositions.length
     }
-    //set new index correspondingly
-    index = (index + 1) % targetPositions.length
+    //RANDOM POINTS
+    else if(CONFIG == 1){
+      let randomIndex
+      do{
+        randomIndex = Math.floor(Math.random() * randomPositions.length);
+        let randomPosition = randomPositions[randomIndex];
+        target.position.set(randomPosition.x, randomPosition.y, randomPosition.z);
+        
+      }while(randomIndex == prevIndex)
+      prevIndex = randomIndex
+      scene.add(target);
+      if (numTargets < targetPositions.length * NUM_GAMELOOP) {
+        numTargets++;
+      }
+    }
+    else{
+      console.log('CONFIG value error');
+    }
+    
   }
   
+}
+
+
+function radomSpawnTargets(scene){
+  const geometry = new THREE.SphereGeometry(0.5, 32, 32);
+  const material = new THREE.MeshBasicMaterial({ color: 0xAA4A44});
+  target = new THREE.Mesh(geometry, material);
+
+  if(numTargets <= targetPositions.length * NUM_GAMELOOP){
+    
+    
+    
+  }
+
 }
 
 
