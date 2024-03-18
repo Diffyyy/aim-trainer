@@ -6,6 +6,17 @@ import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 //NEED TO CHANGE THIS
 const ws = new WebSocket('ws://localhost:8080');
 
+ws.onopen = function(event) {
+  console.log('WebSocket connection opened');
+};
+
+ws.onerror = function(error) {
+  console.error('WebSocket error:', error);
+};
+
+ws.onclose = function(event) {
+  console.log('WebSocket connection closed');
+};
 
 //define constants
 const WIDTH = window.innerWidth;
@@ -300,6 +311,7 @@ function gyroLoop(){
   //TODO: Get the data from gyro.js server
   ws.onmessage = function(event) {
     const data = JSON.parse(event.data);
+    //console.log(data);
     const { deltaX, deltaY } = data;
 
     if (deltaY >= deadZone || deltaY <= -deadZone) {
@@ -323,31 +335,6 @@ function gyroLoop(){
     controls.getObject().quaternion.multiply(combinedQuaternion).normalize();
   };
 
-  // // Create quaternions for rotation
-  // const quaternionUpDown = new THREE.Quaternion();
-  // const quaternionLeftRight = new THREE.Quaternion();
-
-  // if (deltaY >= deadZone || deltaY <= -deadZone) {
-  //   // Adjust rotation around the x-axis (up and down movement)
-  //   quaternionUpDown.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -deltaY * JOYSTICK_SENSITIVITY);
-  // } else {
-  //   quaternionUpDown.set(0, 0, 0, 1); // Identity quaternion if no input
-  // }
-
-  // if (deltaX >= deadZone || deltaX <= -deadZone) {
-  //   // Adjust rotation around the y-axis (left and right movement)
-  //   quaternionLeftRight.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * JOYSTICK_SENSITIVITY);
-  // } else {
-  //   quaternionLeftRight.set(0, 0, 0, 1); // Identity quaternion if no input
-  // }
-
-  // // Combine rotations
-  // const combinedQuaternion = quaternionUpDown.multiply(quaternionLeftRight);
-
-  // // Apply rotation to the camera
-  // controls.getObject().quaternion.multiply(combinedQuaternion).normalize();
-
-  // port.close()
   requestAnimationFrame(gyroLoop);
 }
 
