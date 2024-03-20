@@ -583,41 +583,41 @@ function animate() {
   target.rotation.y += 0.02;
 
 
-  // //CONFIG: Moving Target Horizontal
-  // if(move_counter <= 2 && move_dir){
-  //   move_dir = 1;
-  //   target.position.x += 0.05;
-  //   move_counter += 0.05;
-  // }
-  // else 
-  //   move_dir = 0;
-  
-  // if(move_counter >= -2 && !move_dir)
-  // {
-  //   move_dir = 0;
-  //   target.position.x -= 0.05;
-  //   move_counter -= 0.05;
-  // }
-  // else
-  //   move_dir = 1;
-
-  //CONFIG: Moving Target Vertical
-  if(move_counter <= 1 && move_dir){
+  //CONFIG: Moving Target Horizontal
+  if(move_counter <= 2 && move_dir){
     move_dir = 1;
-    target.position.y += 0.05;
+    target.position.x += 0.05;
     move_counter += 0.05;
   }
   else 
     move_dir = 0;
   
-  if(move_counter >= -1 && !move_dir)
+  if(move_counter >= -2 && !move_dir)
   {
     move_dir = 0;
-    target.position.y -= 0.05;
+    target.position.x -= 0.05;
     move_counter -= 0.05;
   }
   else
     move_dir = 1;
+
+  // //CONFIG: Moving Target Vertical
+  // if(move_counter <= 1 && move_dir){
+  //   move_dir = 1;
+  //   target.position.y += 0.05;
+  //   move_counter += 0.05;
+  // }
+  // else 
+  //   move_dir = 0;
+  
+  // if(move_counter >= -1 && !move_dir)
+  // {
+  //   move_dir = 0;
+  //   target.position.y -= 0.05;
+  //   move_counter -= 0.05;
+  // }
+  // else
+  //   move_dir = 1;
 
   renderer.render(scene, camera);
 }
