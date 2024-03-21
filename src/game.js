@@ -28,7 +28,7 @@ const ROOM_SIZE = 1000;
 const PLAYER = {height: 1.5, turnSpeed: MOUSE_SENSITIVITY, canShoot: false}
 const PLAYER_POV = 100
 //how many times game 'repeats'- game is repeated when all targets in targetPositions are destroyed
-const NUM_GAMELOOP = 5
+const NUM_GAMELOOP = 2
 //either fixed [0] or random points [1]
 const CONFIG = 1
 
@@ -207,9 +207,16 @@ function spawnTarget(scene) {
   const material = new THREE.MeshBasicMaterial({ color: 0xAA4A44});
   target = new THREE.Mesh(geometry, material);
 
-  if(numTargets <= targetPositions.length * NUM_GAMELOOP){
+  // if(CONFIG == 0)
+  //   var numPositions = targetPositions.length
+  // else
+  //   var numPositions = randomPositions.length
+
+  if(numTargets <= randomPositions.length * NUM_GAMELOOP){
+    console.log(numTargets, randomPositions.length, NUM_GAMELOOP)
     //FIXED POINTS
     if(CONFIG == 0){
+      
       target.position.set(targetPositions[index].x, targetPositions[index].y, targetPositions[index].z)
       scene.add(target);
       if (numTargets < targetPositions.length * NUM_GAMELOOP) {
@@ -220,6 +227,7 @@ function spawnTarget(scene) {
     }
     //RANDOM POINTS
     else if(CONFIG == 1){
+      
       let randomIndex
       do{
         randomIndex = Math.floor(Math.random() * randomPositions.length);
@@ -229,7 +237,8 @@ function spawnTarget(scene) {
       }while(randomIndex == prevIndex)
       prevIndex = randomIndex
       scene.add(target);
-      if (numTargets < targetPositions.length * NUM_GAMELOOP) {
+
+      if (numTargets < randomPositions.length * NUM_GAMELOOP) {
         numTargets++;
       }
     }
@@ -502,7 +511,7 @@ function updateScore() {
   const scoreElement = document.getElementById('score');
   if (scoreElement) {
     scoreElement.textContent = score.toString();
-    if (score >= targetPositions.length * NUM_GAMELOOP) {
+    if (score >= randomPositions.length * NUM_GAMELOOP) {
       endGame();
     }
   }
