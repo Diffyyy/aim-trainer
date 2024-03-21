@@ -23,6 +23,7 @@ const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
 const MOUSE_SENSITIVITY = Math.PI * 0.1
 const JOYSTICK_SENSITIVITY = Math.PI * 0.002;
+const GYRO_SENS = Math.PI * 0.0005;
 const ROOM_SIZE = 1000;
 const PLAYER = {height: 1.5, turnSpeed: MOUSE_SENSITIVITY, canShoot: false}
 const PLAYER_POV = 100
@@ -122,7 +123,7 @@ function lockCursor() {
             || document.webkitPointerLockElement === element) {
         controls.enabled = true;
         blocker.style.display = 'none';
-        document.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mousedown', onMouseDown);
         window.addEventListener('gamepadconnected', onGamepadConnected);
         //window.addEventListener('gyroconnected', onGyroConnected);
         gyroLoop();
@@ -377,14 +378,14 @@ function gyroLoop(){
 
     if (deltaY >= deadZone || deltaY <= -deadZone) {
       // Adjust rotation around the x-axis (up and down movement)
-      quaternionUpDown.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -deltaY * JOYSTICK_SENSITIVITY);
+      quaternionUpDown.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -deltaY * GYRO_SENS);
     } else {
       quaternionUpDown.set(0, 0, 0, 1); // Identity quaternion if no input
     }
 
     if (deltaX >= deadZone || deltaX <= -deadZone) {
       // Adjust rotation around the y-axis (left and right movement)
-      quaternionLeftRight.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * JOYSTICK_SENSITIVITY);
+      quaternionLeftRight.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -deltaX * GYRO_SENS);
     } else {
       quaternionLeftRight.set(0, 0, 0, 1); // Identity quaternion if no input
     }
@@ -583,41 +584,41 @@ function animate() {
   target.rotation.y += 0.02;
 
 
-  // //CONFIG: Moving Target Horizontal
-  // if(move_counter <= 2 && move_dir){
-  //   move_dir = 1;
-  //   target.position.x += 0.05;
-  //   move_counter += 0.05;
-  // }
-  // else 
-  //   move_dir = 0;
-  
-  // if(move_counter >= -2 && !move_dir)
-  // {
-  //   move_dir = 0;
-  //   target.position.x -= 0.05;
-  //   move_counter -= 0.05;
-  // }
-  // else
-  //   move_dir = 1;
-
-  //CONFIG: Moving Target Vertical
-  if(move_counter <= 1 && move_dir){
+  //CONFIG: Moving Target Horizontal
+  if(move_counter <= 2 && move_dir){
     move_dir = 1;
-    target.position.y += 0.05;
+    target.position.x += 0.05;
     move_counter += 0.05;
   }
   else 
     move_dir = 0;
   
-  if(move_counter >= -1 && !move_dir)
+  if(move_counter >= -2 && !move_dir)
   {
     move_dir = 0;
-    target.position.y -= 0.05;
+    target.position.x -= 0.05;
     move_counter -= 0.05;
   }
   else
     move_dir = 1;
+
+  // //CONFIG: Moving Target Vertical
+  // if(move_counter <= 1 && move_dir){
+  //   move_dir = 1;
+  //   target.position.y += 0.05;
+  //   move_counter += 0.05;
+  // }
+  // else 
+  //   move_dir = 0;
+  
+  // if(move_counter >= -1 && !move_dir)
+  // {
+  //   move_dir = 0;
+  //   target.position.y -= 0.05;
+  //   move_counter -= 0.05;
+  // }
+  // else
+  //   move_dir = 1;
 
   renderer.render(scene, camera);
 }

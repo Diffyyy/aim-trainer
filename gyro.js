@@ -27,14 +27,15 @@ wss.on('connection', function connection(ws){
                     //console.log(`X: ${x}, Y: ${y}, Z: ${z}`);
 
                     // Compute the change in X and Y
-                    const deltaX = x - prevX;
-                    const deltaY = y - prevY;
+                    const deltaX = x;
+                    const deltaY = -y;
                 
                     // Update previous X and Y values
                     prevX = x;
                     prevY = y;
-                
-                    console.log('Change in X:', deltaX, 'Change in Y:', deltaY);
+                    console.log('X: ', x, 'Y: ', y, 'Z: ', z);
+                    // console.log('Change in X:', deltaX, 'Change in Y:', deltaY);
+                    // if(deltaX > 2 || deltaY > 2 || deltaX < -2 || deltaY < -2)
                     ws.send(JSON.stringify({ deltaX, deltaY }));
                 } else {
                     console.log('Data format not recognized:', line);
